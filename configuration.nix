@@ -5,9 +5,10 @@
   lib,
   config,
   pkgs,
-  modulesPath,
   ...
-}: {
+}:
+
+{
   # You can import other NixOS modules here
   imports = [
     # If you want to use modules from other flakes (such as nixos-hardware):
@@ -119,10 +120,6 @@
   };
 
   environment.variables = {
-    TERMINAL = "foot";
-    TERM = "foot";
-    EDITOR = "nvim";
-    VISUAL = "nvim";
     XDG_CURRENT_DESKTOP = "Hyprland";
     XDG_SESSION_TYPE = "wayland";
     QT_QPA_PLATFORM = "wayland";
@@ -191,6 +188,7 @@
     lm_sensors
     lact
     flatpak
+    vesktop
   ];
 
   programs.hyprland = {
@@ -198,7 +196,14 @@
     xwayland.enable = true;
   };
 
-  chaotic.mesa-git.enable = true;
+  services.sunshine = {
+    enable = true;
+    autoStart = true;
+    capSysAdmin = true;
+    openFirewall = true;
+  };
+
+  # chaotic.mesa-git.enable = true;
 
   ###
 
@@ -218,7 +223,7 @@
         # TODO: Add your SSH public key(s) here, if you plan on using SSH to connect
       # ];
       # TODO: Be sure to add any other groups you need (such as networkmanager, audio, docker, etc)
-      extraGroups = [ "networkmanager" "wheel"];
+      extraGroups = [ "networkmanager" "wheel" ];
       packages = with pkgs; [
       ];
     };

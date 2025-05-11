@@ -9,11 +9,12 @@
     enable = true;
     settings = {
       mainBar = {
+        spacing = 8;
         position = "top";
         height = 32;
         modules-left = [ "hyprland/workspaces" ];
         modules-center = [ "hyprland/window" ];
-        modules-right = [ "pulseaudio" "cpu" "memory"  "clock" "tray" ];
+        modules-right = [ "pulseaudio" "cpu" "memory" "tray" "clock" ];
 
         "hyprland/window" = {
           format = "{}";  # Shows the window title
@@ -28,13 +29,12 @@
         clock = {
           interval = 1;
           timezone = "Europe/Madrid";
-          format = " {:%a %d %b  %I:%M %p}";
+          format = " {:%a %d %b  %I:%M %p} ";
           tooltip = false;
         };
 
         cpu = {
           format = "{usage}% ";
-          tooltip = false;
         };
 
         memory = {

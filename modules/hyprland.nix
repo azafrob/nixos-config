@@ -10,7 +10,9 @@
     xwayland.enable = true;
     settings = {
       monitor = [
-        "DP-1,3440x1440@120,0x0,1"
+        "DP-1,3440x1440@120,0x0,1,bitdepth,10"
+	"HDMI-A-1,disable"
+	"SUNSHINE,1280x800@360,0x0,1,bitdepth,10"
       ];
 
       exec-once = [
@@ -22,7 +24,7 @@
       ];
 
       "$terminal" = "foot";
-      "$menu" = "rofi -show drun";
+      "$menu" = "wofi --show drun";
       "$fileManager" = "lf";
       input = {
         kb_layout = "us";
@@ -73,6 +75,7 @@
         "$mainMod, Space, exec, $menu"
         "$mainMod, Q, killactive"
         "$mainMod, C, exit"
+	"CTRL SHIFT, X, exec, LD_AUDIT='/home/vee/Downloads/SLSsteam/bin/SLSsteam.so' steam steam://open/bigpicture"
         "$mainMod, TAB, workspace, previous"
         "$mainMod, G, exec, pkill waybar || waybar"
         "$mainMod, E, exec, $fileManager"
