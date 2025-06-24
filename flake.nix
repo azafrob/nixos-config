@@ -14,9 +14,6 @@
 
     # Stylix
     stylix.url = "github:danth/stylix";
-
-    # LACT PR for latest version, remove when not needed
-    lact-pr.url = "github:cything/nixpkgs?ref=lact";
   };
 
   outputs = {
@@ -40,14 +37,14 @@
             home-manager.useUserPackages = true;
 	    home-manager.backupFileExtension = "backup";
 
-            # TODO replace ryan with your own username
+            # TODO replace with your own username
             home-manager.users.vee = import ./home.nix;
 
             # Optionally, use home-manager.extraSpecialArgs to pass arguments to home.nix
           }
+	  ./configuration.nix
           inputs.chaotic.nixosModules.default
           inputs.stylix.nixosModules.stylix
-	  ./configuration.nix
 	];
       };
     };
@@ -61,7 +58,6 @@
         extraSpecialArgs = {inherit inputs outputs;};
         # > Our main home-manager configuration file <
         modules = [
-          inputs.stylix.homeManagerModules.stylix
 	  ./home.nix
 	];
       };

@@ -10,22 +10,22 @@
     xwayland.enable = true;
     settings = {
       monitor = [
-        "DP-1,3440x1440@120,0x0,1,bitdepth,10"
+        "DP-1,3440x1440@120,0x0,1"
 	"HDMI-A-1,disable"
 	"SUNSHINE,1280x800@360,0x0,1,bitdepth,10"
       ];
 
       exec-once = [
-        # "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP &"
-        "(dunst & hyprpaper & waybar & foot --server &)"
+        "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP &"
+        "(dunst & hyprpaper & waybar &)"
       ];
 
       env = [
       ];
 
-      "$terminal" = "foot";
+      "$terminal" = "ghostty";
       "$menu" = "wofi --show drun";
-      "$fileManager" = "lf";
+      "$fileManager" = "yazi";
       input = {
         kb_layout = "us";
         kb_variant = "";

@@ -14,11 +14,9 @@
     # If you want to use modules from other flakes (such as nixos-hardware):
     # inputs.hardware.nixosModules.common-cpu-amd
     # inputs.hardware.nixosModules.common-ssd
-
     # You can also split up your configuration and import pieces of it here:
     # ./users.nix
     ./modules/stylix.nix
-    ./modules/fancontrol.nix
     # Import your generated (nixos-generate-config) hardware configuration
     ./hardware-configuration.nix
   ];
@@ -28,12 +26,6 @@
     overlays = [
       # If you want to use overlays exported from other flakes:
       # neovim-nightly-overlay.overlays.default
-      (final: prev: {
-        lact = final.callPackage "${inputs.lact-pr}/pkgs/by-name/la/lact/package.nix" {
-          hwdata = final.callPackage "${inputs.lact-pr}/pkgs/by-name/hw/hwdata/package.nix" {
-          };
-        };
-      })
       # Or define it inline, for example:
       # (final: prev: {
       #   hi = final.hello.overrideAttrs (oldAttrs: {
@@ -90,64 +82,57 @@
 
   ###
 
-  # boot.loader.systemd-boot.enable = true;
-  boot.loader.grub.enable = true;
-  boot.loader.grub.device = "nodev";
-  boot.loader.grub.useOSProber = true;
-  boot.loader.grub.efiSupport = true;
-  boot.loader.efi.canTouchEfiVariables = true;
-  boot.loader.efi.efiSysMountPoint = "/boot";
-
+  boot.loader.limine.enable = true;
+  boot.loader.limine.style.wallpapers = [ ];
   # Limit the number of generations to keep
-  # boot.loader.systemd-boot.configurationLimit = 10;
-  boot.loader.grub.configurationLimit = 10;
+  boot.loader.limine.maxGenerations = 10;
+  boot.loader.limine.extraEntries = ''
+    /Windows
+      protocol: efi
+      path: uuid(7677f76f-28ca-4091-90d0-e84647eee9b4):/EFI/Microsoft/Boot/bootmgfw.efi
+  '';
+
+  boot.loader.efi.canTouchEfiVariables = true;
 
   boot.kernelPackages = pkgs.linuxPackages_cachyos;
   boot.kernelParams = [ "amdgpu.ppfeaturemask=0xfffd7fff" ];
   boot.kernelModules = [ "nct6775" ];
 
-  services.xserver.videoDrivers = [
-    "modesetting"
-    "fbdev"
-    "amdgpu"
-  ];
+  services.xserver.videoDrivers = [ "amdgpu" ];
+
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true;
+  };
 
   services.scx = {
     enable = true;
     package = pkgs.scx_git.full;
     scheduler = "scx_lavd";
-    extraArgs = [ "--performance" ];
+    extraArgs = [ "--autopilot" ];
   };
+
+  services.displayManager.ly.enable = true;
 
   environment.variables = {
     XDG_CURRENT_DESKTOP = "Hyprland";
     XDG_SESSION_TYPE = "wayland";
     QT_QPA_PLATFORM = "wayland";
     GDK_BACKEND = "wayland,x11";
-    # SDL_VIDEODRIVER = "wayland";
     NIXOS_OZONE_WL = "1";
     ELECTRON_OZONE_PLATFORM_HINT = "auto";
     MOZ_ENABLE_WAYLAND = "1";
     WLR_NO_HARDWARE_CURSORS = "1";
+    # SDL_VIDEODRIVER = "wayland";
   };
 
   services.dbus.enable = true;
   xdg.portal = {
     enable = true;
     extraPortals = with pkgs; [
-      xdg-desktop-portal-gtk
       xdg-desktop-portal-hyprland
+      # xdg-desktop-portal-gtk
     ];
-  };
-
-  systemd.services.lact = {
-    description = "LACT Daemon";
-    after = [ "multi-user.target" ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig = {
-      ExecStart = "${pkgs.lact}/bin/lact daemon";
-    };
-    enable = true;
   };
 
   networking.networkmanager.enable = true;
@@ -183,18 +168,27 @@
   environment.systemPackages = with pkgs; [
     home-manager
     git
-    vim
     wget
+    stow
     lm_sensors
-    lact
-    flatpak
-    vesktop
+    fan2go
   ];
+
+  services.lact.enable = true;
 
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
   };
+
+  programs.fish.enable = true;
+  stylix.targets.fish.enable = false;
+
+  programs.firefox.enable = true;
+
+  programs.steam.enable = true;
+  programs.steam.gamescopeSession.enable = true;
+  programs.gamemode.enable = true;
 
   services.sunshine = {
     enable = true;
@@ -203,7 +197,7 @@
     openFirewall = true;
   };
 
-  # chaotic.mesa-git.enable = true;
+  chaotic.mesa-git.enable = true;
 
   ###
 
@@ -226,6 +220,7 @@
       extraGroups = [ "networkmanager" "wheel" ];
       packages = with pkgs; [
       ];
+      shell = pkgs.fish;
     };
   };
 
