@@ -14,38 +14,32 @@
 
     # Stylix
     stylix.url = "github:danth/stylix";
+    stylix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = {
-    self,
-    nixpkgs,
-    home-manager,
-    ...
-  } @ inputs: let
-    inherit (self) outputs;
-  in {
+  outputs = { self, nixpkgs, home-manager, chaotic, stylix }@inputs: {
     # NixOS configuration entrypoint
     # Available through 'nixos-rebuild --flake .#your-hostname'
     nixosConfigurations = {
       # FIXME replace with your hostname
-      nixos = nixpkgs.lib.nixosSystem {
-        specialArgs = {inherit inputs outputs;};
+      "nixos" = nixpkgs.lib.nixosSystem {
+        #specialArgs = {inherit inputs outputs;};
         # > Our main nixos configuration file <
         modules = [
           home-manager.nixosModules.home-manager {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-	    home-manager.backupFileExtension = "backup";
+            home-manager.backupFileExtension = "backup";
 
-            # TODO replace with your own username
-            home-manager.users.vee = import ./home.nix;
+            # FIXME replace with your own username
+            home-manager.users."vee" = import ./home.nix;
 
             # Optionally, use home-manager.extraSpecialArgs to pass arguments to home.nix
           }
-	  ./configuration.nix
-          inputs.chaotic.nixosModules.default
-          inputs.stylix.nixosModules.stylix
-	];
+          ./configuration.nix
+          chaotic.nixosModules.default
+          stylix.nixosModules.stylix
+        ];
       };
     };
 
@@ -55,11 +49,12 @@
       # FIXME replace with your username@hostname
       "vee@nixos" = home-manager.lib.homeManagerConfiguration {
         pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
-        extraSpecialArgs = {inherit inputs outputs;};
+        #extraSpecialArgs = {inherit inputs outputs;};
         # > Our main home-manager configuration file <
         modules = [
-	  ./home.nix
-	];
+          ./home.nix
+          stylix.homeModules.stylix
+        ];
       };
     };
   };

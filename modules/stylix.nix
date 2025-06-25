@@ -1,16 +1,8 @@
+{ pkgs, ... }:
+
 {
-  inputs,
-  lib,
-  config,
-  pkgs,
-  ...
-}: {
-stylix.enable = true;
-stylix.autoEnable = true;
-stylix.image = pkgs.fetchurl {
-    url = "https://raw.githubusercontent.com/orangci/walls-catppuccin-mocha/master/dominik-mayer-24.jpg";
-    sha256 = "j6AonV/8BeuceGFhpCwTY0T4BmCLXfw67fnQ99+oGyc=";
-  };
+  stylix.enable = true;
+  stylix.autoEnable = true;
   stylix.polarity = "dark";
   stylix.base16Scheme = "${pkgs.base16-schemes}/share/themes/catppuccin-mocha.yaml";
   stylix.cursor = {
@@ -42,5 +34,10 @@ stylix.image = pkgs.fetchurl {
   stylix.opacity = {
     terminal = 0.85;
     desktop = 0.85;
+  };
+  stylix.targets.fish.enable = false;
+  home-manager.users."vee" = {
+    stylix.targets.ghostty.enable = false;
+    stylix.targets.neovim.enable = false;
   };
 }

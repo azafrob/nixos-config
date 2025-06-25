@@ -1,156 +1,65 @@
-# This is your system's configuration file.
-# Use this to configure your system environment (it replaces /etc/nixos/configuration.nix)
-{
-  inputs,
-  lib,
-  config,
-  pkgs,
-  ...
-}:
+# Edit this configuration file to define what should be installed on
+# your system.  Help is available in the configuration.nix(5) man page
+# and in the NixOS manual (accessible by running ‘nixos-help’).
+
+{ config, pkgs, lib, inputs, ... }:
 
 {
-  # You can import other NixOS modules here
-  imports = [
-    # If you want to use modules from other flakes (such as nixos-hardware):
-    # inputs.hardware.nixosModules.common-cpu-amd
-    # inputs.hardware.nixosModules.common-ssd
-    # You can also split up your configuration and import pieces of it here:
-    # ./users.nix
-    ./modules/stylix.nix
-    # Import your generated (nixos-generate-config) hardware configuration
-    ./hardware-configuration.nix
-  ];
-
-  nixpkgs = {
-    # You can add overlays here
-    overlays = [
-      # If you want to use overlays exported from other flakes:
-      # neovim-nightly-overlay.overlays.default
-      # Or define it inline, for example:
-      # (final: prev: {
-      #   hi = final.hello.overrideAttrs (oldAttrs: {
-      #     patches = [ ./change-hello-to-hi.patch ];
-      #   });
-      # })
+  imports =
+    [ # Include the results of the hardware scan.
+      ./hardware-configuration.nix
+      ./modules/stylix.nix
     ];
-    # Configure your nixpkgs instance
-    config = {
-      # Disable if you don't want unfree packages
-      allowUnfree = true;
-    };
+
+  # Enable flakes feature
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  # Enable hard link for duplicated files to save space
+  nix.settings.auto-optimise-store = true;
+  # Enable garbage collection weekly
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 1w";
   };
 
-  nix = let
-    flakeInputs = lib.filterAttrs (_: lib.isType "flake") inputs;
-  in {
-    settings = {
-      # Enable flakes and new 'nix' command
-      experimental-features = [ "nix-command" "flakes" ];
-      # Opinionated: disable global registry
-      flake-registry = "";
-      # Workaround for https://github.com/NixOS/nix/issues/9574
-      nix-path = config.nix.nixPath;
-      # Optimize storage
-      # You can also manually optimize the store via:
-      # nix-store --optimise
-      # Refer to the following link for more details:
-      # https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-auto-optimise-store
-      # Opinionated: disable channels
-      auto-optimise-store = true;
-    };
-    # Perform garbage collection weekly to maintain low disk usage
-    gc = {
-      automatic = true;
-      dates = "weekly";
-      options = "--delete-older-than 1w";
-    };
+  # Add CachyOS kernel
+  boot.kernelPackages = pkgs.linuxPackages_cachyos;
+  # Enable AMD overdrive
+  boot.kernelParams = [ "amdgpu.ppfeaturemask=0xfffd7fff" ];
+  # Add kernel module for fan controller
+  boot.kernelModules = [ "nct6775" ];
 
-    # Optimize storage
-    # You can also manually optimize the store via:
-    # nix-store --optimise
-    # Refer to the following link for more details:
-    # https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-auto-optimise-store
-    # Opinionated: disable channels
-    channel.enable = false;
+  services.xserver.videoDrivers = [ "amdgpu" ];
 
-    # Opinionated: make flake registry and nix path match flake inputs
-    registry = lib.mapAttrs (_: flake: {inherit flake;}) flakeInputs;
-    nixPath = lib.mapAttrsToList (n: _: "${n}=flake:${n}") flakeInputs;
-  };
-
-  # FIXME: Add the rest of your current configuration
-
-  ###
-
+  # Bootloader.
+  #boot.loader.systemd-boot.enable = true;
+  # Enable limine as bootloader
   boot.loader.limine.enable = true;
   boot.loader.limine.style.wallpapers = [ ];
   # Limit the number of generations to keep
   boot.loader.limine.maxGenerations = 10;
+  # Add Windows entry to bootloader
   boot.loader.limine.extraEntries = ''
     /Windows
       protocol: efi
       path: uuid(7677f76f-28ca-4091-90d0-e84647eee9b4):/EFI/Microsoft/Boot/bootmgfw.efi
   '';
-
   boot.loader.efi.canTouchEfiVariables = true;
 
-  boot.kernelPackages = pkgs.linuxPackages_cachyos;
-  boot.kernelParams = [ "amdgpu.ppfeaturemask=0xfffd7fff" ];
-  boot.kernelModules = [ "nct6775" ];
+  networking.hostName = "nixos"; # Define your hostname.
+  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
-  services.xserver.videoDrivers = [ "amdgpu" ];
+  # Configure network proxy if necessary
+  # networking.proxy.default = "http://user:password@proxy:port/";
+  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
-  hardware.graphics = {
-    enable = true;
-    enable32Bit = true;
-  };
-
-  services.scx = {
-    enable = true;
-    package = pkgs.scx_git.full;
-    scheduler = "scx_lavd";
-    extraArgs = [ "--autopilot" ];
-  };
-
-  services.displayManager.ly.enable = true;
-
-  environment.variables = {
-    XDG_CURRENT_DESKTOP = "Hyprland";
-    XDG_SESSION_TYPE = "wayland";
-    QT_QPA_PLATFORM = "wayland";
-    GDK_BACKEND = "wayland,x11";
-    NIXOS_OZONE_WL = "1";
-    ELECTRON_OZONE_PLATFORM_HINT = "auto";
-    MOZ_ENABLE_WAYLAND = "1";
-    WLR_NO_HARDWARE_CURSORS = "1";
-    # SDL_VIDEODRIVER = "wayland";
-  };
-
-  services.dbus.enable = true;
-  xdg.portal = {
-    enable = true;
-    extraPortals = with pkgs; [
-      xdg-desktop-portal-hyprland
-      # xdg-desktop-portal-gtk
-    ];
-  };
-
+  # Enable networking
   networking.networkmanager.enable = true;
 
-  services.printing.enable = true;
-
-  services.pulseaudio.enable = false;
-  security.rtkit.enable = true;
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
-    jack.enable = true;
-  };
-
+  # Set your time zone.
   time.timeZone = "Europe/Madrid";
 
+  # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
 
   i18n.extraLocaleSettings = {
@@ -165,31 +74,133 @@
     LC_TIME = "es_ES.UTF-8";
   };
 
-  environment.systemPackages = with pkgs; [
-    home-manager
-    git
-    wget
-    stow
-    lm_sensors
-    fan2go
-  ];
+  # Enable the X11 windowing system.
+  # You can disable this if you're only using the Wayland session.
+  #services.xserver.enable = true;
 
-  services.lact.enable = true;
+  # Graphics support?
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true;
+  };
 
+  # Scheduler settings
+  services.scx = {
+    enable = true;
+    package = pkgs.scx_git.full;
+    scheduler = "scx_lavd";
+    extraArgs = [ "--autopilot" ];
+  };
+
+  # Enable the KDE Plasma Desktop Environment.
+  #services.displayManager.sddm.enable = true;
+  #services.desktopManager.plasma6.enable = true;
+
+  # Enable ly as display manager
+  services.displayManager.ly.enable = true;
+
+  # TODO Must research what they do, tweak if issues arise
+  environment.variables = {
+    #XDG_CURRENT_DESKTOP = "Hyprland";
+    #XDG_SESSION_TYPE = "wayland";
+    #QT_QPA_PLATFORM = "wayland";
+    #GDK_BACKEND = "wayland,x11";
+    #NIXOS_OZONE_WL = "1";
+    #ELECTRON_OZONE_PLATFORM_HINT = "auto";
+    #MOZ_ENABLE_WAYLAND = "1";
+    #WLR_NO_HARDWARE_CURSORS = "1";
+    #SDL_VIDEODRIVER = "wayland";
+  };
+
+  # TODO Must research what they do, tweak if issues arise
+  services.dbus.enable = true;
+  xdg.portal = {
+    enable = true;
+    extraPortals = with pkgs; [
+      xdg-desktop-portal-hyprland
+      #xdg-desktop-portal-gtk
+    ];
+  };
+
+  # Configure keymap in X11
+  services.xserver.xkb = {
+    layout = "us";
+    variant = "";
+  };
+
+  # Enable CUPS to print documents.
+  services.printing.enable = true;
+
+  # Enable sound with pipewire.
+  services.pulseaudio.enable = false;
+  security.rtkit.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+    # If you want to use JACK applications, uncomment this
+    jack.enable = true;
+
+    # use the example session manager (no others are packaged yet so this is enabled by default,
+    # no need to redefine it in your config for now)
+    #media-session.enable = true;
+  };
+
+  # Enable touchpad support (enabled default in most desktopManager).
+  # services.xserver.libinput.enable = true;
+
+  # Define a user account. Don't forget to set a password with ‘passwd’.
+  users.users."vee" = {
+    isNormalUser = true;
+    description = "vee";
+    extraGroups = [ "networkmanager" "wheel" ];
+    packages = with pkgs; [
+      #thunderbird
+    ];
+    # Set default shell for user
+    shell = pkgs.fish;
+  };
+
+  # Install firefox.
+  programs.firefox.enable = true;
+
+  # Install Git
+  programs.git.enable = true;
+
+  # Install Hyprland
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
   };
 
+  # Install fish
   programs.fish.enable = true;
-  stylix.targets.fish.enable = false;
 
-  programs.firefox.enable = true;
+  # Install waybar
+  programs.waybar.enable = true;
 
+  # Install neovim
+  programs.neovim.enable = true;
+
+  # Install LACT
+  services.lact.enable = true;
+
+  # Install yazi
+  programs.yazi.enable = true;
+
+  # Install zoxide
+  programs.zoxide.enable = true;
+
+  # Install bat
+  programs.bat.enable = true;
+
+  # Install Steam and other gaming tools
   programs.steam.enable = true;
   programs.steam.gamescopeSession.enable = true;
   programs.gamemode.enable = true;
 
+  # Install Sunshine
   services.sunshine = {
     enable = true;
     autoStart = true;
@@ -197,46 +208,91 @@
     openFirewall = true;
   };
 
+  # Enable virtualisation
+  virtualisation.podman = {
+    enable = true;
+    dockerCompat = true;
+  };
+
+  # Enable flatpaks
+  services.flatpak.enable = true;
+
+  # Enable appimages
+  programs.appimage = {
+    enable = true;
+    binfmt = true;
+  };
+
+  # Install mesa git
   chaotic.mesa-git.enable = true;
 
-  ###
+  # Allow unfree packages
+  nixpkgs.config.allowUnfree = true;
 
-  # TODO: Set your hostname
-  networking.hostName = "nixos";
+  # List packages installed in system profile. To search, run:
+  # $ nix search wget
+  environment.systemPackages = with pkgs; [
+    distrobox
+    hyprpaper
+    dunst
+    eza
+    fan2go
+    fastfetch
+    fzf
+    gcc
+    ghostty
+    gnumake
+    home-manager
+    lm_sensors
+    mangohud
+    ripgrep
+    stow
+    tealdeer
+    unzip
+    vesktop
+    wget
+    wl-clipboard
+    wofi
+    pavucontrol
+  ];
 
-  # TODO: Configure your system-wide user settings (groups, etc), add more users as needed.
-  users.users = {
-    # FIXME: Replace with your username
-    vee = {
-      # TODO: You can set an initial password for your user.
-      # If you do, you can skip setting a root password by passing '--no-root-passwd' to nixos-install.
-      # Be sure to change it (using passwd) after rebooting!
-      # initialPassword = "correcthorsebatterystaple";
-      isNormalUser = true;
-      # openssh.authorizedKeys.keys = [
-        # TODO: Add your SSH public key(s) here, if you plan on using SSH to connect
-      # ];
-      # TODO: Be sure to add any other groups you need (such as networkmanager, audio, docker, etc)
-      extraGroups = [ "networkmanager" "wheel" ];
-      packages = with pkgs; [
-      ];
-      shell = pkgs.fish;
+  # Some programs need SUID wrappers, can be configured further or are
+  # started in user sessions.
+  # programs.mtr.enable = true;
+  # programs.gnupg.agent = {
+  #   enable = true;
+  #   enableSSHSupport = true;
+  # };
+
+  # List services that you want to enable:
+
+  # Enable the OpenSSH daemon.
+  # services.openssh.enable = true;
+
+  systemd.services.fan2go = {
+    enable = true;
+    description = "Advanced Fan Control program";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "lm-sensors.service" ];
+    serviceConfig = {
+      ExecStart = "${pkgs.fan2go}/bin/fan2go -c /etc/fan2go/fan2go.yaml --no-style";
+      Restart = "always";
+      RestartSec = "1s";
     };
   };
 
-  # This setups a SSH server. Very important if you're setting up a headless system.
-  # Feel free to remove if you don't need it.
-  # services.openssh = {
-    # enable = true;
-    # settings = {
-      # Opinionated: forbid root login through SSH.
-      # PermitRootLogin = "no";
-      # Opinionated: use keys only.
-      # Remove if you want to SSH using passwords
-      # PasswordAuthentication = false;
-    # };
-  # };
+  # Open ports in the firewall.
+  # networking.firewall.allowedTCPPorts = [ ... ];
+  # networking.firewall.allowedUDPPorts = [ ... ];
+  # Or disable the firewall altogether.
+  # networking.firewall.enable = false;
 
-  # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
-  system.stateVersion = "25.05";
+  # This value determines the NixOS release from which the default
+  # settings for stateful data, like file locations and database versions
+  # on your system were taken. It‘s perfectly fine and recommended to leave
+  # this value at the release version of the first install of this system.
+  # Before changing this value read the documentation for this option
+  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
+  system.stateVersion = "25.05"; # Did you read the comment?
+
 }

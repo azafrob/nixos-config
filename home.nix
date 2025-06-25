@@ -1,46 +1,17 @@
 # This is your home-manager configuration file
 # Use this to configure your home environment (it replaces ~/.config/home-manager/home.nix)
+{ config, pkgs, lib, inputs, ... }:
+
 {
-  inputs,
-  lib,
-  config,
-  pkgs,
-  ...
-}: {
   # You can import other home-manager modules here
   imports = [
     # If you want to use home-manager modules from other flakes (such as nix-colors):
     # inputs.nix-colors.homeManagerModule
     # You can also split up your configuration and import pieces of it here:
     # ./nvim.nix
-    ./modules/hyprland.nix
-    ./modules/waybar.nix
-    ./modules/wofi.nix
-    ./modules/mangohud.nix
   ];
 
-  # nixpkgs = {
-    # You can add overlays here
-    # overlays = [
-      # If you want to use overlays exported from other flakes:
-      # neovim-nightly-overlay.overlays.default
-      # Or define it inline, for example:
-      # (final: prev: {
-      #   hi = final.hello.overrideAttrs (oldAttrs: {
-      #     patches = [ ./change-hello-to-hi.patch ];
-      #   });
-      # })
-    # ];
-    # Configure your nixpkgs instance
-    # config = {
-      # Disable if you don't want unfree packages
-      # allowUnfree = true;
-      # Workaround for https://github.com/nix-community/home-manager/issues/2942
-      # allowUnfreePredicate = _: true;
-    # };
-  # };
-
-  # TODO: Set your username
+  # FIXME Set your username
   home = {
     username = "vee";
     homeDirectory = "/home/vee";
@@ -55,20 +26,11 @@
   # Enable home-manager
   programs.home-manager.enable = true;
 
-  # Enable ghostty
-  programs.ghostty.enable = true;
-
-  # Enable neovim
-  programs.neovim.enable = true;
-
-  # Enable yazi
-  programs.yazi.enable = true;
-
-  # Enable bat
-  programs.bat.enable = true;
-
-  # Enable fastfetch
-  programs.fastfetch.enable = true;
+  programs.git = {
+    enable = true;
+    userName = "Adrian";
+    userEmail = "adrian@adrian.com";
+  };
 
   # Nicely reload system units when changing configs
   systemd.user.startServices = "sd-switch";
