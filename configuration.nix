@@ -234,13 +234,16 @@
   environment.systemPackages = with pkgs; [
     distrobox
     hyprpaper
-    xfce.thunar
+    kdePackages.dolphin
     dunst
     eza
     fan2go
     fastfetch
     fzf
     gcc
+    p7zip
+    btop
+    rar
     ghostty
     gnumake
     home-manager
