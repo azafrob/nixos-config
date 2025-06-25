@@ -234,7 +234,7 @@
   environment.systemPackages = with pkgs; [
     distrobox
     hyprpaper
-    thunar
+    xfce.thunar
     dunst
     eza
     fan2go
